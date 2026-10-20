@@ -1,0 +1,11 @@
+node_modules/
+dist/
+out/
+cache/
+contracts/cache/
+contracts/out/
+broadcast/
+.env
+.env.*
+.arc-studio/
+*.log

@@ -1,0 +1,654 @@
+{
+  "contractAddress": "0x6b4068700511fd9a3bf3ce77d9ca4887270a5460",
+  "network": "ARC-TESTNET",
+  "deployerWalletId": "3c2464b2-8369-52e2-a782-800bbeca5396",
+  "contract_code_path": "/home/user/app/contracts/Keepalive.sol",
+  "contract_compiled_code_path": "/home/user/app/contracts/out/Keepalive.sol/Keepalive.json",
+  "contract_network_and_links": {
+    "Arc Testnet": "https://explorer.testnet.arc.io/address/0x6b4068700511fd9a3bf3ce77d9ca4887270a5460"
+  },
+  "contract_deployments": [
+    {
+      "chain": "Arc Testnet",
+      "address": "0x6b4068700511fd9a3bf3ce77d9ca4887270a5460",
+      "explorerUrl": "https://explorer.testnet.arc.io/address/0x6b4068700511fd9a3bf3ce77d9ca4887270a5460",
+      "txHash": "0xe45ee4a8e8a998f73da4cca2dd60ac7a72679757aa25c22ad2017884ee1f7417",
+      "deployedAt": "2026-10-20T18:03:59.260Z"
+    },
+    {
+      "chain": "Arc Testnet",
+      "address": "0xd051bde9ef648faf12512d9afd8966de97d38179",
+      "explorerUrl": "https://explorer.testnet.arc.io/address/0xd051bde9ef648faf12512d9afd8966de97d38179",
+      "txHash": "0x2c2b1ffb1a9edaa2426c68d435b2725aa3e211876787d57e60e72463612d7926",
+      "deployedAt": "2026-10-20T17:21:17.412Z"
+    }
+  ],
+  "abi": [
+    {
+      "type": "function",
+      "name": "alive",
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool",
+          "internalType": "bool"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "cancel",
+      "inputs": [
+        {
+          "name": "subId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "createPlan",
+      "inputs": [
+        {
+          "name": "pricePerEpoch",
+          "type": "uint96",
+          "internalType": "uint96"
+        },
+        {
+          "name": "epochSeconds",
+          "type": "uint32",
+          "internalType": "uint32"
+        },
+        {
+          "name": "heartbeatSigner",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "internalType": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "planId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "credit",
+      "inputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "currentEpoch",
+      "inputs": [
+        {
+          "name": "planId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "heartbeat",
+      "inputs": [
+        {
+          "name": "planId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "isAlive",
+      "inputs": [
+        {
+          "name": "planId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "epoch",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool",
+          "internalType": "bool"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "pending",
+      "inputs": [
+        {
+          "name": "subId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "toProvider",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "toSubscriber",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "planCount",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "plans",
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "provider",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "pricePerEpoch",
+          "type": "uint96",
+          "internalType": "uint96"
+        },
+        {
+          "name": "epochSeconds",
+          "type": "uint32",
+          "internalType": "uint32"
+        },
+        {
+          "name": "startTime",
+          "type": "uint64",
+          "internalType": "uint64"
+        },
+        {
+          "name": "heartbeatSigner",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "internalType": "string"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "settle",
+      "inputs": [
+        {
+          "name": "subId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "settleAndWithdraw",
+      "inputs": [
+        {
+          "name": "subIds",
+          "type": "uint256[]",
+          "internalType": "uint256[]"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "subCount",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "subscribe",
+      "inputs": [
+        {
+          "name": "planId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "epochs",
+          "type": "uint32",
+          "internalType": "uint32"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "subId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "subscriptionState",
+      "inputs": [
+        {
+          "name": "subId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "escrowed",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "pendingToProvider",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "pendingToSubscriber",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "subscriptions",
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "planId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "subscriber",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "startEpoch",
+          "type": "uint64",
+          "internalType": "uint64"
+        },
+        {
+          "name": "epochs",
+          "type": "uint32",
+          "internalType": "uint32"
+        },
+        {
+          "name": "settledCount",
+          "type": "uint32",
+          "internalType": "uint32"
+        },
+        {
+          "name": "cancelled",
+          "type": "bool",
+          "internalType": "bool"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "subscriptionsOf",
+      "inputs": [
+        {
+          "name": "subscriber",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256[]",
+          "internalType": "uint256[]"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "withdraw",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "event",
+      "name": "Cancelled",
+      "inputs": [
+        {
+          "name": "subId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "refundedFuture",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "Heartbeat",
+      "inputs": [
+        {
+          "name": "planId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "epoch",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "timestamp",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "PlanCreated",
+      "inputs": [
+        {
+          "name": "planId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "provider",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "pricePerEpoch",
+          "type": "uint96",
+          "indexed": false,
+          "internalType": "uint96"
+        },
+        {
+          "name": "epochSeconds",
+          "type": "uint32",
+          "indexed": false,
+          "internalType": "uint32"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "indexed": false,
+          "internalType": "string"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "Settled",
+      "inputs": [
+        {
+          "name": "subId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "paidEpochs",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "refundedEpochs",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "Subscribed",
+      "inputs": [
+        {
+          "name": "subId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "planId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "subscriber",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "startEpoch",
+          "type": "uint64",
+          "indexed": false,
+          "internalType": "uint64"
+        },
+        {
+          "name": "epochs",
+          "type": "uint32",
+          "indexed": false,
+          "internalType": "uint32"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "Withdrawn",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "amount",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "AlreadyCancelled",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "EpochTooLong",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidEpochCount",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidEpochLength",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidPrice",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidSigner",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "NotHeartbeatSigner",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "NotSubscriber",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "PlanNotFound",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "Reentrancy",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "SubscriptionNotFound",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "TooManyEpochs",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "TooManyIds",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "WithdrawFailed",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "WrongPayment",
+      "inputs": []
+    }
+  ]
+}

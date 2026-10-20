@@ -9,6 +9,7 @@ import { ExternalLink, RefreshCw } from 'lucide-react'
 import { KEEPALIVE_ABI } from '@/keepalive-contract'
 import { KEEPALIVE_ADDRESS, KEEPALIVE_CHAIN_ID } from '@/keepalive-config'
 import { buildTxExplorerUrl, requireChain } from '@/onchain-facts'
+import { arcTransport } from '@/config'
 
 const chain = requireChain(KEEPALIVE_CHAIN_ID)
 const NATIVE_DECIMALS = chain.nativeCurrency.decimals
@@ -57,7 +58,7 @@ const viemClient = createPublicClient({
     nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: NATIVE_DECIMALS },
     rpcUrls: { default: { http: [chain.rpcUrls[0]] } },
   },
-  transport: http(chain.rpcUrls[0]),
+  transport: KEEPALIVE_CHAIN_ID === 5042 ? arcTransport : http(chain.rpcUrls[0]),
 })
 
 const CHUNK = 1000n

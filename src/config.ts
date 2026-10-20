@@ -3,7 +3,8 @@
  * Built with Arc Studio — https://studio.arc.io
  */
 
-import { http, createConfig } from 'wagmi'
+import { http, createConfig, fallback } from 'wagmi'
+import { custom } from 'viem'
 import { mainnet } from 'wagmi/chains'
 import { arcTestnet } from 'viem/chains'
 import { defineChain } from 'viem'
@@ -31,11 +32,22 @@ export const arcMainnet = defineChain({
 registerChain(arcMainnet.id, arcMainnet.rpcUrls.default.http[0])
 registerChain(arcTestnet.id, arcTestnet.rpcUrls.default.http[0])
 
+/**
+ * Reads go to the public Arc RPC first. Some browsers (Brave Shields, strict
+ * privacy extensions) block that cross-site fetch, so fall back to the
+ * connected wallet's own RPC when the public endpoint is unreachable.
+ */
+type Eip1193 = { request: (args: { method: string; params?: unknown }) => Promise<unknown> }
+const injectedProvider = (globalThis as { ethereum?: Eip1193 }).ethereum
+export const arcTransport = injectedProvider
+  ? fallback([http('https://rpc.mainnet.arc.io'), custom(injectedProvider)])
+  : http('https://rpc.mainnet.arc.io')
+
 export const config = createConfig({
   chains: [arcMainnet, arcTestnet, mainnet], // mainnet needed for ENS resolution
   connectors: [injected()],
   transports: {
-    [arcMainnet.id]: http('https://rpc.mainnet.arc.io'),
+    [arcMainnet.id]: arcTransport,
     [arcTestnet.id]: http(),
     [mainnet.id]: http(), // ENS resolution uses mainnet
   },

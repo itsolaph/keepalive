@@ -26,6 +26,9 @@ export const arcMainnet = defineChain({
   blockExplorers: {
     default: { name: 'ArcScan', url: 'https://explorer.arc.io' },
   },
+  contracts: {
+    multicall3: { address: '0xcA11bde05977b3631167028862bE2a173976CA11', blockCreated: 0 },
+  },
 })
 
 // Pre-register chain RPC URLs so trace events show correct chain names immediately
@@ -39,9 +42,11 @@ registerChain(arcTestnet.id, arcTestnet.rpcUrls.default.http[0])
  */
 type Eip1193 = { request: (args: { method: string; params?: unknown }) => Promise<unknown> }
 const injectedProvider = (globalThis as { ethereum?: Eip1193 }).ethereum
+// The public RPC rate-limits bursts (-32005); batch reads and back off on retry.
+const arcHttp = http('https://rpc.mainnet.arc.io', { batch: { batchSize: 40, wait: 20 }, retryCount: 6, retryDelay: 400 })
 export const arcTransport = injectedProvider
-  ? fallback([http('https://rpc.mainnet.arc.io'), custom(injectedProvider)])
-  : http('https://rpc.mainnet.arc.io')
+  ? fallback([arcHttp, custom(injectedProvider)])
+  : arcHttp
 
 export const config = createConfig({
   chains: [arcMainnet, arcTestnet, mainnet], // mainnet needed for ENS resolution

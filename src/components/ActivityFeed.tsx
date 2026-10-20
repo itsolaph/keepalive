@@ -63,6 +63,7 @@ const viemClient = createPublicClient({
 
 const CHUNK = 1000n
 const MAX_CHUNKS = 400
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 /** Block of the Keepalive v1.1 mainnet deployment; no events exist before it */
 const DEPLOY_BLOCK = 26984122n
 const LOOKBACK = 50000n // ~8 hours at 15s blocks; Arc is faster so this covers more
@@ -71,6 +72,17 @@ export function ActivityFeed() {
   const [events, setEvents] = useState<KnownEvent[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const getLogsWithRetry = async (fromBlock: bigint, toBlock: bigint) => {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await viemClient.getLogs({ address: KEEPALIVE_ADDRESS, events: EVENT_ABIS, fromBlock, toBlock })
+      } catch (e) {
+        if (attempt >= 4) throw e
+        await sleep(1500 * (attempt + 1))
+      }
+    }
+  }
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -83,7 +95,9 @@ export function ActivityFeed() {
       let to = head
       for (let i = 0; i < MAX_CHUNKS && to >= floor && found.length < 15; i++) {
         const from = to >= floor + CHUNK - 1n ? to - CHUNK + 1n : floor
-        const logs = await viemClient.getLogs({ address: KEEPALIVE_ADDRESS, events: EVENT_ABIS, fromBlock: from, toBlock: to })
+        // eth_getLogs on the public RPC allows roughly one call per second
+        if (i > 0) await sleep(1100)
+        const logs = await getLogsWithRetry(from, to)
         for (const log of [...logs].reverse()) {
           if (!log.transactionHash || log.blockNumber == null) continue
           const a = (log.args ?? {}) as Record<string, unknown>

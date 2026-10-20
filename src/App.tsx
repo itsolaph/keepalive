@@ -39,7 +39,7 @@ export default function App() {
                 Keepalive
               </div>
               <div className="text-xs" style={{ color: 'var(--subtle)' }}>
-                Provable uptime subscriptions · v1.1
+                Pay-per-uptime subscriptions · v1.1
               </div>
             </div>
           </div>

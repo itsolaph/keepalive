@@ -124,8 +124,17 @@ function HeartbeatStrip({
 
   // Short epochs (< 1 hour) show up to 30 squares; otherwise 24
   const maxSquares = epochSeconds < 3600 ? 30 : 24
-  const count = Math.min(maxSquares, currentEpochVal + 1)
-  const startIdx = currentEpochVal - count + 1
+  // Paging: `back` = how many epochs the window's right edge sits behind the current epoch.
+  // `?at=<planId>:<epoch>` deep-links a window ending at that epoch (handy for sharing a past outage).
+  const [back, setBack] = useState(() => {
+    const at = new URLSearchParams(window.location.search).get('at')
+    const [p, e] = (at ?? '').split(':')
+    if (p === planId.toString() && e && /^\d+$/.test(e)) return Math.max(0, currentEpochVal - Number(e))
+    return 0
+  })
+  const lastIdx = Math.max(0, currentEpochVal - back)
+  const count = Math.min(maxSquares, lastIdx + 1)
+  const startIdx = lastIdx - count + 1
   const startTimeSec = Number(startTime)
 
   const calls = useMemo(
@@ -175,8 +184,23 @@ function HeartbeatStrip({
         </span>
       </div>
       <div className="mt-1 flex gap-3 text-xs" style={{ color: 'var(--subtle)' }}>
-        <span>← older</span>
-        <span>newer →</span>
+        <button
+          type="button"
+          className="hover:underline disabled:opacity-40"
+          disabled={startIdx === 0}
+          onClick={() => setBack((b) => Math.min(currentEpochVal, b + maxSquares))}
+        >
+          ← older
+        </button>
+        <button
+          type="button"
+          className="hover:underline disabled:opacity-40"
+          disabled={back === 0}
+          onClick={() => setBack((b) => Math.max(0, b - maxSquares))}
+        >
+          newer →
+        </button>
+        {back > 0 && <span>epochs {startIdx}–{lastIdx}</span>}
       </div>
     </div>
   )

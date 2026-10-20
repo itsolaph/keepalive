@@ -4,7 +4,7 @@
  * from the chain head up to a reasonable lookback window.
  */
 import { useEffect, useState, useCallback } from 'react'
-import { createPublicClient, http, parseAbiItem, type Log } from 'viem'
+import { createPublicClient, http, parseAbiItem } from 'viem'
 import { ExternalLink, RefreshCw } from 'lucide-react'
 import { KEEPALIVE_ABI } from '@/keepalive-contract'
 import { KEEPALIVE_ADDRESS, KEEPALIVE_CHAIN_ID } from '@/keepalive-config'
@@ -62,6 +62,9 @@ const viemClient = createPublicClient({
 })
 
 const CHUNK = 1000n
+const MAX_CHUNKS = 400
+/** Block of the Keepalive v1.1 mainnet deployment; no events exist before it */
+const DEPLOY_BLOCK = 26984122n
 const LOOKBACK = 50000n // ~8 hours at 15s blocks; Arc is faster so this covers more
 
 export function ActivityFeed() {
@@ -74,140 +77,56 @@ export function ActivityFeed() {
     setError(null)
     try {
       const head = await viemClient.getBlockNumber()
-      const fromBlock = head > LOOKBACK ? head - LOOKBACK : 0n
-
-      // Collect logs in chunks
-      const allLogs: Log[] = []
-      for (let start = fromBlock; start <= head; start += CHUNK + 1n) {
-        const end = start + CHUNK > head ? head : start + CHUNK
-        const chunk = await viemClient.getLogs({
-          address: KEEPALIVE_ADDRESS,
-          fromBlock: start,
-          toBlock: end,
-        })
-        allLogs.push(...chunk)
-        if (allLogs.length >= 500) break // safety cap
-      }
-
-      // Fetch block timestamps for the unique blocks we saw (batch by unique block numbers)
-      const uniqueBlocks = [...new Set(allLogs.map((l) => l.blockNumber).filter(Boolean))] as bigint[]
-      const blockTimestamps = new Map<bigint, bigint>()
-      await Promise.all(
-        uniqueBlocks.map(async (bn) => {
-          try {
-            const blk = await viemClient.getBlock({ blockNumber: bn })
-            blockTimestamps.set(bn, blk.timestamp)
-          } catch {
-            // ignore
-          }
-        }),
-      )
-
-      // Parse into display items
-      const decoded: KnownEvent[] = []
-      for (const log of allLogs) {
-        if (!log.transactionHash || !log.blockNumber) continue
-        const blockTs = blockTimestamps.get(log.blockNumber)
-        const txHash = log.transactionHash
-        const bn = log.blockNumber
-
-        // Identify by topic[0]
-        const topic0 = log.topics[0]
-        if (!topic0) continue
-
-        try {
-          // Subscribed
-          if (EVENT_ABIS[0].inputs) {
-            const sub = await viemClient.getLogs({ address: KEEPALIVE_ADDRESS, event: EVENT_ABIS[0], fromBlock: bn, toBlock: bn }).catch(() => [])
-            const match = sub.find((s) => s.transactionHash === txHash)
-            if (match?.args) {
-              const a = match.args as { subId?: bigint; planId?: bigint; epochs?: number }
-              decoded.push({ name: 'Subscribed', label: `Sub #${a.subId ?? '?'} · Plan #${a.planId ?? '?'} · ${a.epochs ?? '?'} epochs`, txHash, blockNumber: bn, blockTimestamp: blockTs })
+      const floor = KEEPALIVE_CHAIN_ID === 5042 ? DEPLOY_BLOCK : (head > LOOKBACK ? head - LOOKBACK : 0n)
+      const found: KnownEvent[] = []
+      // Walk backwards in windows of CHUNK blocks (the public RPC caps eth_getLogs ranges)
+      let to = head
+      for (let i = 0; i < MAX_CHUNKS && to >= floor && found.length < 15; i++) {
+        const from = to >= floor + CHUNK - 1n ? to - CHUNK + 1n : floor
+        const logs = await viemClient.getLogs({ address: KEEPALIVE_ADDRESS, events: EVENT_ABIS, fromBlock: from, toBlock: to })
+        for (const log of [...logs].reverse()) {
+          if (!log.transactionHash || log.blockNumber == null) continue
+          const a = (log.args ?? {}) as Record<string, unknown>
+          let label = ''
+          let amountLabel: string | undefined
+          switch (log.eventName) {
+            case 'Subscribed':
+              label = `Sub #${a['subId'] ?? '?'} · Plan #${a['planId'] ?? '?'} · ${a['epochs'] ?? '?'} epochs`
+              break
+            case 'Heartbeat':
+              label = `Plan #${a['planId'] ?? '?'} · Epoch ${a['epoch'] ?? '?'}`
+              break
+            case 'Settled':
+              label = `Sub #${a['subId'] ?? '?'} · ${a['paidEpochs'] ?? 0} paid · ${a['refundedEpochs'] ?? 0} refunded`
+              break
+            case 'Cancelled': {
+              label = `Sub #${a['subId'] ?? '?'}`
+              const r = a['refundedFuture'] as bigint | undefined
+              if (r && r > 0n) amountLabel = `${formatNative(r)} USDC refunded`
+              break
+            }
+            case 'Withdrawn': {
+              const acct = a['account'] as string | undefined
+              const amt = a['amount'] as bigint | undefined
+              label = acct ? `${acct.slice(0, 6)}…${acct.slice(-4)}` : '?'
+              if (amt) amountLabel = `${formatNative(amt)} USDC`
+              break
+            }
+            default:
               continue
-            }
           }
-        } catch { /* continue */ }
-
-        // Fallback: use raw topic matching for simpler events
-        const topicMap: Record<string, string> = {}
-        for (const abi of EVENT_ABIS) {
-          // compute signature manually: name(types)
-          const sig = `${abi.name}(${abi.inputs.map((i) => i.type).join(',')})`
-          // We can't easily keccak here without viem/crypto, so skip — rely on getLogs below
-          topicMap[sig] = abi.name
+          found.push({ name: log.eventName as string, label, amountLabel, txHash: log.transactionHash, blockNumber: log.blockNumber })
+          if (found.length >= 15) break
         }
+        if (from === floor) break
+        to = from - 1n
       }
-
-      // Simpler approach: query each event type directly
-      const result: KnownEvent[] = []
-
-      for (const abi of EVENT_ABIS) {
-        try {
-          const logs = await viemClient.getLogs({
-            address: KEEPALIVE_ADDRESS,
-            event: abi,
-            fromBlock,
-            toBlock: head,
-          })
-          for (const log of logs) {
-            if (!log.transactionHash || !log.blockNumber) continue
-            const blockTs = blockTimestamps.get(log.blockNumber) ?? undefined
-            const txHash = log.transactionHash
-            const bn = log.blockNumber
-            const a = log.args as Record<string, unknown>
-
-            let label = ''
-            let amountLabel: string | undefined
-
-            switch (abi.name) {
-              case 'Subscribed': {
-                const subId = a['subId'] as bigint | undefined
-                const planId = a['planId'] as bigint | undefined
-                const epCount = a['epochs'] as number | undefined
-                label = `Sub #${subId ?? '?'} · Plan #${planId ?? '?'} · ${epCount ?? '?'} epochs`
-                break
-              }
-              case 'Heartbeat': {
-                const planId = a['planId'] as bigint | undefined
-                const epoch = a['epoch'] as bigint | undefined
-                label = `Plan #${planId ?? '?'} · Epoch ${epoch ?? '?'}`
-                break
-              }
-              case 'Settled': {
-                const subId = a['subId'] as bigint | undefined
-                const paid = a['paidEpochs'] as bigint | undefined
-                const refunded = a['refundedEpochs'] as bigint | undefined
-                label = `Sub #${subId ?? '?'} · ${paid ?? 0} paid · ${refunded ?? 0} refunded`
-                break
-              }
-              case 'Cancelled': {
-                const subId = a['subId'] as bigint | undefined
-                const refundedFuture = a['refundedFuture'] as bigint | undefined
-                label = `Sub #${subId ?? '?'}`
-                if (refundedFuture && refundedFuture > 0n) {
-                  amountLabel = `${formatNative(refundedFuture)} USDC refunded`
-                }
-                break
-              }
-              case 'Withdrawn': {
-                const account = a['account'] as string | undefined
-                const amount = a['amount'] as bigint | undefined
-                label = account ? `${account.slice(0, 6)}…${account.slice(-4)}` : '?'
-                if (amount) amountLabel = `${formatNative(amount)} USDC`
-                break
-              }
-            }
-
-            result.push({ name: abi.name, label, amountLabel, txHash, blockNumber: bn, blockTimestamp: blockTs })
-          }
-        } catch {
-          // skip this event type on error
-        }
-      }
-
-      // Sort newest first, take 15
-      result.sort((a, b) => (b.blockNumber > a.blockNumber ? 1 : -1))
-      setEvents(result.slice(0, 15))
+      const blocks = [...new Set(found.map((e) => e.blockNumber))]
+      const ts = new Map<bigint, bigint>()
+      await Promise.all(blocks.map(async (bn) => {
+        try { ts.set(bn, (await viemClient.getBlock({ blockNumber: bn })).timestamp) } catch { /* ignore */ }
+      }))
+      setEvents(found.map((e) => ({ ...e, blockTimestamp: ts.get(e.blockNumber) })))
     } catch (e) {
       setError(e instanceof Error ? e.message.slice(0, 120) : 'Failed to load activity')
     } finally {

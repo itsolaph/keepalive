@@ -24,6 +24,7 @@ KILL_DIR = os.path.expanduser(os.environ.get("KA_KILL_DIR", "~/.keepalive"))
 UA = {"User-Agent": "keepalive-bot/1.1"}
 ASSETS = ["BTC", "ETH"]
 TICK = 10
+LOW_GAS = float(os.environ.get("KA_LOW_GAS_USDC", "0.05"))
 FEED_EVERY = 60
 
 
@@ -75,6 +76,14 @@ def heartbeat(plan):
     return d["transactionHash"]
 
 
+def signer_balance():
+    with open(KEYFILE) as f:
+        key = f.read().strip()
+    addr = subprocess.run([CAST, "wallet", "address", "--private-key", key],
+                          capture_output=True, text=True, timeout=30).stdout.strip()
+    return float(cast("balance", addr, "--ether"))
+
+
 def load_state():
     try:
         s = json.load(open(STATE))
@@ -114,6 +123,7 @@ def main():
     s = load_state()
     feed_ok_at, tg_ok, last_feed = 0.0, False, 0.0
     log("start plans", PLANS, "contract", CONTRACT)
+    last_gas_check, gas_warned = 0.0, False
     while True:
         if time.time() - last_feed >= FEED_EVERY:
             last_feed = time.time()
@@ -142,6 +152,16 @@ def main():
                 s["last_hb"][plan] = ep
             except Exception as e:
                 log(f"plan {plan} chain error:", e)
+        if time.time() - last_gas_check >= 3600:
+            last_gas_check = time.time()
+            try:
+                bal = signer_balance()
+                if bal < LOW_GAS and not gas_warned:
+                    log(f"signer gas low: {bal:.4f} USDC")
+                    tg_send(f"Keepalive: heartbeat signer has {bal:.4f} USDC left for gas. Top it up or heartbeats stop.")
+                gas_warned = bal < LOW_GAS
+            except Exception as e:
+                log("gas check error:", e)
         save_state(s)
         time.sleep(TICK)
 

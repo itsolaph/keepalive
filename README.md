@@ -2,6 +2,8 @@
 
 USDC subscriptions that refund every epoch the service misses.
 
+<img src="docs/screenshot.png" alt="Keepalive: pay-per-uptime plans with on-chain heartbeats and per-epoch uptime bars" width="100%">
+
 A provider sells a service by the epoch (say, 15 minutes). Subscribers prepay a number of future epochs into escrow. Each epoch, the provider's heartbeat signer calls `heartbeat(planId)`. After an epoch ends, anyone can settle it: epochs with a heartbeat pay the provider, epochs without one go back to the subscriber. Cancel refunds every epoch that hasn't started yet. Payouts are pull-based (`withdraw` or `settleAndWithdraw`).
 
 No support tickets, no refund requests. A missed heartbeat is the refund.
